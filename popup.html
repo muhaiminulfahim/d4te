@@ -1,109 +1,212 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>d4te</title>
-  <style>
-    :root {
-      --bg: #0f1115;
-      --panel: #171a21;
-      --line: #2a2f3a;
-      --text: #e8eaf0;
-      --muted: #8b93a4;
-      --accent: #4ade80;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      width: 320px;
-      padding: 16px;
-      background: var(--bg);
-      color: var(--text);
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-      color-scheme: dark;
-    }
-    h1 { font-size: 15px; font-weight: 600; margin-bottom: 14px; letter-spacing: .02em; }
-    label { display: block; font-size: 11px; color: var(--muted); margin: 0 0 5px; text-transform: uppercase; letter-spacing: .08em; }
-    input {
-      width: 100%;
-      padding: 10px 12px;
-      margin-bottom: 12px;
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      color: var(--text);
-      font: inherit;
-      font-size: 14px;
-      outline: none;
-    }
-    input:focus { border-color: var(--accent); }
-    textarea {
-      width: 100%;
-      padding: 10px 12px;
-      margin-bottom: 12px;
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      color: var(--text);
-      font: inherit;
-      font-size: 13px;
-      line-height: 1.4;
-      resize: vertical;
-      min-height: 64px;
-      max-height: 160px;
-      outline: none;
-    }
-    textarea:focus { border-color: var(--accent); }
-    button.add {
-      width: 100%;
-      padding: 10px;
-      background: var(--accent);
-      color: #06210f;
-      border: 0;
-      border-radius: 8px;
-      font: inherit;
-      font-weight: 600;
-      cursor: pointer;
-    }
-    button.add:hover { filter: brightness(1.08); }
-    .error { color: #f87171; font-size: 12px; min-height: 16px; margin-bottom: 8px; }
-    .list { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 12px; max-height: 220px; overflow-y: auto; }
-    .list:empty { display: none; }
-    .item { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 13px; }
-    .item .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .item .date { color: var(--muted); font-size: 11px; }
-    .item button {
-      background: none; border: 0; color: var(--muted); cursor: pointer; font-size: 16px; line-height: 1; padding: 2px 6px; border-radius: 4px;
-    }
-    .item button:hover { color: #f87171; background: var(--panel); }
-    button.cancel {
-      width: 100%; margin-top: 8px; padding: 9px; background: none; color: var(--muted);
-      border: 1px solid var(--line); border-radius: 8px; font: inherit; font-size: 13px; cursor: pointer;
-    }
-    button.cancel[hidden] { display: none; }
-    button.cancel:hover { color: var(--text); }
-    .item.editing { background: var(--panel); border-radius: 6px; padding-left: 6px; }
-    .item button.edit:hover { color: var(--accent); }
-    .repo { display: block; margin-top: 14px; text-align: center; font-size: 11px; color: var(--muted); text-decoration: none; }
-    .repo:hover { color: var(--accent); }
-  </style>
-</head>
-<body>
-  <h1>d4te</h1>
-  <form id="form">
-    <label for="name">Task name</label>
-    <input id="name" type="text" maxlength="120" placeholder="e.g. Submit assignment" autocomplete="off" required>
-    <label for="date">Deadline (optional)</label>
-    <input id="date" type="date">
-    <label for="desc">Description (optional)</label>
-    <textarea id="desc" rows="3" maxlength="2000" placeholder="Notes, links, details…"></textarea>
-    <div class="error" id="error"></div>
-    <button class="add" id="submit" type="submit">Add Task</button>
-    <button class="cancel" id="cancel" type="button" hidden>Cancel</button>
-  </form>
-  <div class="list" id="list"></div>
-  <a class="repo" id="repo" target="_blank" rel="noopener noreferrer"></a>
-  <script src="sort.js"></script>
-  <script src="popup.js"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>d4te: Deadline Visualizer</title>
+    <style>
+      :root {
+        --bg: #0f1115;
+        --panel: #171a21;
+        --line: #2a2f3a;
+        --text: #e8eaf0;
+        --muted: #8b93a4;
+        --accent: #4ade80;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        width: 320px;
+        padding: 16px;
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          system-ui,
+          -apple-system,
+          "Segoe UI",
+          Roboto,
+          sans-serif;
+        color-scheme: dark;
+      }
+      h1 {
+        font-size: 15px;
+        font-weight: 600;
+        margin-bottom: 14px;
+        letter-spacing: 0.02em;
+      }
+      label {
+        display: block;
+        font-size: 11px;
+        color: var(--muted);
+        margin: 0 0 5px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      input {
+        width: 100%;
+        padding: 10px 12px;
+        margin-bottom: 12px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        color: var(--text);
+        font: inherit;
+        font-size: 14px;
+        outline: none;
+      }
+      input:focus {
+        border-color: var(--accent);
+      }
+      textarea {
+        width: 100%;
+        padding: 10px 12px;
+        margin-bottom: 12px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        color: var(--text);
+        font: inherit;
+        font-size: 13px;
+        line-height: 1.4;
+        resize: vertical;
+        min-height: 64px;
+        max-height: 160px;
+        outline: none;
+      }
+      textarea:focus {
+        border-color: var(--accent);
+      }
+      button.add {
+        width: 100%;
+        padding: 10px;
+        background: var(--accent);
+        color: #06210f;
+        border: 0;
+        border-radius: 8px;
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      button.add:hover {
+        filter: brightness(1.08);
+      }
+      .error {
+        color: #f87171;
+        font-size: 12px;
+        min-height: 16px;
+        margin-bottom: 8px;
+      }
+      .list {
+        margin-top: 16px;
+        border-top: 1px solid var(--line);
+        padding-top: 12px;
+        max-height: 220px;
+        overflow-y: auto;
+      }
+      .list:empty {
+        display: none;
+      }
+      .item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 0;
+        font-size: 13px;
+      }
+      .item .name {
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .item .date {
+        color: var(--muted);
+        font-size: 11px;
+      }
+      .item button {
+        background: none;
+        border: 0;
+        color: var(--muted);
+        cursor: pointer;
+        font-size: 16px;
+        line-height: 1;
+        padding: 2px 6px;
+        border-radius: 4px;
+      }
+      .item button:hover {
+        color: #f87171;
+        background: var(--panel);
+      }
+      button.cancel {
+        width: 100%;
+        margin-top: 8px;
+        padding: 9px;
+        background: none;
+        color: var(--muted);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        font: inherit;
+        font-size: 13px;
+        cursor: pointer;
+      }
+      button.cancel[hidden] {
+        display: none;
+      }
+      button.cancel:hover {
+        color: var(--text);
+      }
+      .item.editing {
+        background: var(--panel);
+        border-radius: 6px;
+        padding-left: 6px;
+      }
+      .item button.edit:hover {
+        color: var(--accent);
+      }
+      .repo {
+        display: block;
+        margin-top: 14px;
+        text-align: center;
+        font-size: 11px;
+        color: var(--muted);
+        text-decoration: none;
+      }
+      .repo:hover {
+        color: var(--accent);
+      }
+    </style>
+  </head>
+  <body>
+    <h1>d4te: Deadline Visualizer</h1>
+    <form id="form">
+      <label for="name">Task name</label>
+      <input
+        id="name"
+        type="text"
+        maxlength="120"
+        placeholder="e.g. Submit assignment"
+        autocomplete="off"
+        required
+      />
+      <label for="date">Deadline</label>
+      <input id="date" type="date" />
+      <label for="desc">Description (optional)</label>
+      <textarea
+        id="desc"
+        rows="3"
+        maxlength="2000"
+        placeholder="Notes, links, details…"
+      ></textarea>
+      <div class="error" id="error"></div>
+      <button class="add" id="submit" type="submit">Add Task</button>
+      <button class="cancel" id="cancel" type="button" hidden>Cancel</button>
+    </form>
+    <div class="list" id="list"></div>
+    <a class="repo" id="repo" target="_blank" rel="noopener noreferrer"></a>
+    <script src="sort.js"></script>
+    <script src="popup.js"></script>
+  </body>
 </html>

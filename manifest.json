@@ -14,7 +14,7 @@
     "service_worker": "background.js"
   },
   "action": {
-    "default_title": "d4te",
+    "default_title": "d4te: Deadline Visualizer",
     "default_popup": "popup.html",
     "default_icon": {
       "16": "icons/icon16.png",
