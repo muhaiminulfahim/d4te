@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "d4te",
-  "version": "1.1.0",
-  "description": "Deadline tracker with a car-style fuel gauge on your new tab. Fully local, no login.",
+  "version": "1.0.0",
+  "description": "Chromium-based browser extension aid for ADHD time-blind people. To make your deadlines visible, accessible, color-coded.",
   "permissions": ["storage", "contextMenus"],
   "icons": {
     "16": "icons/icon16.png",
