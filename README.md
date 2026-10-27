@@ -8,7 +8,7 @@ Chromium-based browser extension aid for ADHD time-blind people. To make your de
 
 No login. Fully offline. Everything stays in your browser.
 
-> **Download:** d4te v1.0.3 is listed on [GitHub Releases](https://github.com/muhaiminulfahim/d4te/releases). Grab the latest build there.
+> **Download:** d4te v1.0.0 is listed on [GitHub Releases](https://github.com/muhaiminulfahim/d4te/releases). Grab the latest build there.
 
 ## Features
 
