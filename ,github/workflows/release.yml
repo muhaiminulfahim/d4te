@@ -1,0 +1,28 @@
+name: Deploy Release ZIP
+
+on:
+  push:
+    tags:
+      - "v*" # Triggers the workflow only when you push a tag starting with 'v' (e.g., v1.0.0)
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Required to allow GitHub Actions to create a release
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create ZIP archive
+        # Replace 'my-artifact.zip' with your desired filename
+        # Replace '.' with the specific folder path if you don't want to zip the whole repo
+        run: zip -r my-artifact.zip . -x "*.git*" ".github*"
+
+      - name: Create GitHub Release and Upload Asset
+        uses: softprops/action-gh-release@v2
+        with:
+          files: my-artifact.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
