@@ -4,11 +4,11 @@
 
 <h1 align="center">d4te</h1>
 
-A tiny, local-first deadline tracker that replaces your new tab with a clean dashboard of tasks, each with a car-style fuel gauge showing how much time is left.
+Chromium-based browser extension aid for ADHD time-blind people. To make your deadlines visible, accessible, color-coded.
 
-No login. No servers. No tracking. Everything stays in your browser.
+No login. Fully offline. Everything stays in your browser.
 
-> **Download:** d4te v1.0.0 is listed on [GitHub Releases](https://github.com/muhaiminulfahim/d4te/releases). Grab the latest build there.
+> **Download:** d4te v1.0.3 is listed on [GitHub Releases](https://github.com/muhaiminulfahim/d4te/releases). Grab the latest build there.
 
 ## Features
 
@@ -28,12 +28,12 @@ No login. No servers. No tracking. Everything stays in your browser.
 
 ## Color rules
 
-| Days left | Gauge |
-|-----------|-------|
-| 7 or more | 🟩 Green |
-| 3 to 6 | 🟨 Yellow |
-| 2 or fewer, due today, or overdue | 🟥 Red |
-| No deadline set | ⬜ Empty |
+| Days left                         | Gauge     |
+| --------------------------------- | --------- |
+| 7 or more                         | 🟩 Green  |
+| 3 to 6                            | 🟨 Yellow |
+| 2 or fewer, due today, or overdue | 🟥 Red    |
+| No deadline set                   | ⬜ Empty  |
 
 The gauge fills one block per day, up to 10. Overdue and due-today tasks show a full red gauge.
 
@@ -57,16 +57,19 @@ If Chrome asks "Change back to Google?", choose **Keep it**. Only one extension 
 ## Usage
 
 ### Add a task
+
 - **From the popup:** click the d4te icon, enter a **task name**, optionally a **deadline** and **description**, then click **Add Task**.
 - **From any webpage:** select some text, right-click, and choose **Add "…" to d4te**. The toolbar icon flashes a ✓. Selections longer than 120 characters are shortened for the task name, and the full text is kept in the description.
 
 ### On the new tab
+
 - **Set or change a deadline:** click **+ Set deadline** (or the existing date) and pick a day. Clear the date in the picker to remove it.
 - **Add or edit a note:** hover a task and click **+ note**, or click the existing note. Press `Ctrl/Cmd + Enter` or click away to save, and `Esc` to cancel.
 - **Reorder:** drag a task card and drop it above or below another task with the same deadline. A line shows where it will land. Tasks with different deadlines are kept in deadline order automatically.
 - **Delete:** click the **×** button.
 
 ### Edit from the popup
+
 Click the **✎** button next to a task, change its name, deadline or description, then click **Save changes** (or **Cancel**). The task keeps its position.
 
 ## Project structure
@@ -109,4 +112,4 @@ Released under the [MIT License](LICENSE).
 
 ## Author
 
-Made by [Muhaiminul Islam Khan (Fahim)](https://github.com/muhaiminulfahim/).
+Made by [Muhaiminul Islam Khan](https://github.com/muhaiminulfahim/).
