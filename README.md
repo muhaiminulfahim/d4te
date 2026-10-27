@@ -1,8 +1,14 @@
-# d4te
+<p align="center">
+  <img src="icons/icon128.png" alt="d4te icon" width="96" height="96">
+</p>
+
+<h1 align="center">d4te</h1>
 
 A tiny, local-first deadline tracker that replaces your new tab with a clean dashboard of tasks, each with a car-style fuel gauge showing how much time is left.
 
 No login. No servers. No tracking. Everything stays in your browser.
+
+> **Download:** d4te v1.0.0 is listed on [GitHub Releases](https://github.com/muhaiminulfahim/d4te/releases). Grab the latest build there.
 
 ## Features
 
@@ -32,7 +38,7 @@ The gauge fills one block per day, up to 10. Overdue and due-today tasks show a 
 
 ## Install (unpacked)
 
-1. Download or clone this repository:
+1. Download the latest build from [GitHub Releases](https://github.com/muhaiminulfahim/d4te/releases) and unzip it, or clone this repository:
    ```
    git clone https://github.com/muhaiminulfahim/d4te.git
    ```
