@@ -23,7 +23,7 @@ async function getTasks() {
 }
 
 async function render() {
-  const tasks = await getTasks(); // stored order = order shown on the new tab
+  const tasks = sortTasks(await getTasks()); // same order as the new tab
   listEl.textContent = '';
   for (const t of tasks) {
     const row = document.createElement('div');
@@ -101,7 +101,7 @@ form.addEventListener('submit', async (e) => {
   } else {
     tasks.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name, deadline, description });
   }
-  await store.set({ tasks });
+  await store.set({ tasks: sortTasks(tasks) });
   resetForm();
 });
 

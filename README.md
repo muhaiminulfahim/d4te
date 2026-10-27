@@ -12,14 +12,15 @@ No login. No servers. No tracking. Everything stays in your browser.
 
 ## Features
 
-- **New tab dashboard:** a centered clock, date, and all your tasks in the order you choose.
+- **New tab dashboard:** a centered clock, date, and all your tasks.
+- **Sorted by days left:** tasks are ordered automatically from the lowest days left (most overdue) to the highest. Tasks with no deadline go last.
 - **Fuel gauge:** each task shows a 10-block gauge and the exact days left.
 - **Right-click to add:** select text on any webpage, right-click, and send it straight to d4te as a task.
 - **Descriptions:** add a short note to any task, from the popup or directly on the new tab.
 - **Deadlines on the tab:** set, change or clear a deadline right on the new tab. Tasks can start with no deadline.
 - **Quick add:** click the extension icon, enter a task name (and optionally a deadline and note), done.
 - **Edit anytime:** change a task's name, deadline or description from the popup without deleting it.
-- **Drag-and-drop ordering:** reorder tasks on the new tab; your order is saved.
+- **Drag-and-drop ordering:** reorder tasks that share the same deadline; your order is saved.
 - **Instant sync:** the new tab updates the moment you add, edit, reorder or delete a task.
 - **Private:** data lives in `chrome.storage.local` on your device only.
 - **Works everywhere Chromium does:** Chrome, Brave, Edge, Opera (Manifest V3).
@@ -62,7 +63,7 @@ If Chrome asks "Change back to Google?", choose **Keep it**. Only one extension 
 ### On the new tab
 - **Set or change a deadline:** click **+ Set deadline** (or the existing date) and pick a day. Clear the date in the picker to remove it.
 - **Add or edit a note:** hover a task and click **+ note**, or click the existing note. Press `Ctrl/Cmd + Enter` or click away to save, and `Esc` to cancel.
-- **Reorder:** drag a task card and drop it above or below another. A line shows where it will land.
+- **Reorder:** drag a task card and drop it above or below another task with the same deadline. A line shows where it will land. Tasks with different deadlines are kept in deadline order automatically.
 - **Delete:** click the **×** button.
 
 ### Edit from the popup
@@ -74,6 +75,7 @@ Click the **✎** button next to a task, change its name, deadline or descriptio
 d4te/
 ├── manifest.json   # Manifest V3: popup, new tab override, background worker
 ├── background.js   # Right-click "Add to d4te" context menu
+├── sort.js         # Shared deadline sorting, soonest first
 ├── popup.html      # Task input UI
 ├── popup.js        # Add/edit/delete logic for the popup
 ├── newtab.html     # Dashboard markup
@@ -94,7 +96,7 @@ d4te makes no network requests and collects no data.
 ## Notes
 
 - **The footer strip on the new tab** ("Customize Chrome" and the extension name) is added by Chrome to any extension-controlled new tab. Extensions can't remove or restyle it. Brave, Edge and Opera don't show it.
-- Tasks are **not** auto-sorted by deadline. New tasks are added to the bottom, and the order you drag them into is the order saved.
+- Sorting is applied whenever tasks are saved (from the popup, the right-click menu, or the new tab), using a shared `sort.js`. Tasks with the same deadline keep the order you gave them, and new tasks go below the others with that deadline.
 - Days left are counted in whole calendar days using your local time zone, and refresh automatically at midnight.
 
 ## Contributing

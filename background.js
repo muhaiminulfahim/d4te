@@ -1,3 +1,5 @@
+importScripts('sort.js');
+
 const MENU_ID = 'd4te-add-selection';
 const NAME_MAX = 120;
 const DESC_MAX = 2000;
@@ -40,7 +42,7 @@ chrome.contextMenus.onClicked.addListener(async (info) => {
   const { tasks } = await chrome.storage.local.get('tasks');
   const list = Array.isArray(tasks) ? tasks : [];
   list.push(task);
-  await chrome.storage.local.set({ tasks: list });
+  await chrome.storage.local.set({ tasks: sortTasks(list) });
 
   flashBadge('✓', '#22c55e');
 });

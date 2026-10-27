@@ -6,6 +6,7 @@ const clockEl = document.getElementById('clock');
 const todayEl = document.getElementById('today');
 
 let dragId = null;
+let dragGroup = null;
 
 // Whole calendar days between today (local) and the deadline (local midnight).
 function daysLeft(deadlineISO) {
@@ -51,7 +52,7 @@ function el(tag, cls, text) {
 
 async function updateTask(id, patch) {
   const cur = (await store.get('tasks')).tasks || [];
-  await store.set({ tasks: cur.map(x => (x.id === id ? { ...x, ...patch } : x)) });
+  await store.set({ tasks: sortTasks(cur.map(x => (x.id === id ? { ...x, ...patch } : x))) });
 }
 
 // Move item `dragId` before/after `targetId`.
@@ -69,11 +70,14 @@ function clearMarks() {
   tasksEl.querySelectorAll('.drop-before, .drop-after').forEach(n => n.classList.remove('drop-before', 'drop-after'));
 }
 
-function attachDrag(card, t) {
+// Tasks are sorted by deadline, so they can only be reordered among tasks
+// that share the same deadline (groupKey).
+function attachDrag(card, t, groupKey) {
   card.draggable = true;
 
   card.addEventListener('dragstart', (e) => {
     dragId = t.id;
+    dragGroup = groupKey;
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', t.id);
     // let the browser snapshot the card before dimming it
@@ -81,7 +85,7 @@ function attachDrag(card, t) {
   });
 
   card.addEventListener('dragover', (e) => {
-    if (!dragId || dragId === t.id) return;
+    if (!dragId || dragId === t.id || dragGroup !== groupKey) return;
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
     const r = card.getBoundingClientRect();
@@ -92,19 +96,20 @@ function attachDrag(card, t) {
 
   card.addEventListener('drop', async (e) => {
     e.preventDefault();
-    if (!dragId || dragId === t.id) return;
+    if (!dragId || dragId === t.id || dragGroup !== groupKey) return;
     const r = card.getBoundingClientRect();
     const after = e.clientY > r.top + r.height / 2;
     const id = dragId;
     dragId = null;
     clearMarks();
     const cur = (await store.get('tasks')).tasks || [];
-    await store.set({ tasks: reorder(cur.slice(), id, t.id, after) });
+    await store.set({ tasks: sortTasks(reorder(cur.slice(), id, t.id, after)) });
     // storage.onChanged re-renders the list
   });
 
   card.addEventListener('dragend', () => {
     dragId = null;
+    dragGroup = null;
     card.classList.remove('dragging');
     clearMarks();
   });
@@ -167,7 +172,7 @@ function editDescription(t, card, info, existing) {
 
 async function render() {
   const { tasks } = await store.get('tasks');
-  const list = Array.isArray(tasks) ? tasks : []; // stored order is the shown order
+  const list = sortTasks(Array.isArray(tasks) ? tasks : []); // soonest deadline first
 
   tasksEl.textContent = '';
 
@@ -233,7 +238,7 @@ async function render() {
 
     gaugeWrap.append(gauge, daysEl, del);
     card.append(info, gaugeWrap);
-    attachDrag(card, t);
+    attachDrag(card, t, t.deadline || '');
     tasksEl.appendChild(card);
   }
 }
