@@ -1,6 +1,7 @@
 const form = document.getElementById('form');
 const nameEl = document.getElementById('name');
 const dateEl = document.getElementById('date');
+const timeEl = document.getElementById('time');
 const descEl = document.getElementById('desc');
 const errorEl = document.getElementById('error');
 const listEl = document.getElementById('list');
@@ -16,6 +17,13 @@ function todayISO() {
   const day = String(d.getDate()).padStart(2, '0');
   return `${d.getFullYear()}-${m}-${day}`;
 }
+
+// A time only makes sense with a date, so the time field is off until one is picked.
+function syncTime() {
+  timeEl.disabled = !dateEl.value;
+  if (!dateEl.value) timeEl.value = '';
+}
+dateEl.addEventListener('input', syncTime);
 
 async function getTasks() {
   const { tasks } = await store.get('tasks');
@@ -36,7 +44,7 @@ async function render() {
 
     const date = document.createElement('span');
     date.className = 'date';
-    date.textContent = t.deadline || 'no deadline';
+    date.textContent = t.deadline ? t.deadline + (t.time ? ' ' + t.time : '') : 'no deadline';
 
     const edit = document.createElement('button');
     edit.className = 'edit';
@@ -63,6 +71,8 @@ function startEdit(t) {
   editingId = t.id;
   nameEl.value = t.name;
   dateEl.value = t.deadline || '';
+  syncTime();
+  timeEl.value = t.deadline ? (t.time || '') : '';
   descEl.value = t.description || '';
   submitBtn.textContent = 'Save changes';
   cancelBtn.hidden = false;
@@ -75,6 +85,8 @@ function resetForm() {
   editingId = null;
   nameEl.value = '';
   dateEl.value = todayISO();
+  timeEl.value = '';
+  syncTime();
   descEl.value = '';
   submitBtn.textContent = 'Add Task';
   cancelBtn.hidden = true;
@@ -89,6 +101,7 @@ form.addEventListener('submit', async (e) => {
   e.preventDefault();
   const name = nameEl.value.trim();
   const deadline = dateEl.value; // '' = no deadline yet
+  const time = deadline ? timeEl.value : ''; // '' = no time, date only
   const description = descEl.value.trim();
   if (!name) {
     errorEl.textContent = 'Enter a task name.';
@@ -97,9 +110,9 @@ form.addEventListener('submit', async (e) => {
   const tasks = await getTasks();
   const idx = editingId ? tasks.findIndex(x => x.id === editingId) : -1;
   if (idx >= 0) {
-    tasks[idx] = { ...tasks[idx], name, deadline, description }; // edit in place, keep position
+    tasks[idx] = { ...tasks[idx], name, deadline, time, description }; // edit in place, keep position
   } else {
-    tasks.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name, deadline, description });
+    tasks.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name, deadline, time, description });
   }
   await store.set({ tasks: sortTasks(tasks) });
   resetForm();
@@ -116,5 +129,6 @@ repoEl.href = REPO_URL;
 repoEl.textContent = 'github/d4te';
 
 dateEl.value = todayISO();
+syncTime();
 nameEl.focus();
 render();

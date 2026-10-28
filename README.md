@@ -8,17 +8,19 @@ Chromium-based browser extension aid for ADHD time-blind people. To make your de
 
 No login. Fully offline. Everything stays in your browser.
 
-> **Download:** d4te v1.0.0 is listed on [GitHub Releases](https://github.com/muhaiminulfahim/d4te/releases). Grab the latest build there.
+> **Download:** d4te v1.0.3 is listed on [GitHub Releases](https://github.com/muhaiminulfahim/d4te/releases). Grab the latest build there.
 
 ## Features
 
 - **New tab dashboard:** a centered clock, date, and all your tasks.
 - **Sorted by days left:** tasks are ordered automatically from the lowest days left (most overdue) to the highest. Tasks with no deadline go last.
 - **Fuel gauge:** each task shows a 10-block gauge and the exact days left.
+- **Optional time:** give a deadline a time of day. Tasks due the same day are ordered by time.
+- **Hours countdown:** when a task has a time and less than a day is left, d4te counts hours and minutes (like `3h 20m left`) instead of days. It also shows `overdue` the same way for the first day after the deadline passes.
 - **Right-click to add:** select text on any webpage, right-click, and send it straight to d4te as a task.
 - **Descriptions:** add a short note to any task, from the popup or directly on the new tab.
 - **Deadlines on the tab:** set, change or clear a deadline right on the new tab. Tasks can start with no deadline.
-- **Quick add:** click the extension icon, enter a task name (and optionally a deadline and note), done.
+- **Quick add:** click the extension icon, enter a task name (and optionally a deadline, time and note), done.
 - **Edit anytime:** change a task's name, deadline or description from the popup without deleting it.
 - **Drag-and-drop ordering:** reorder tasks that share the same deadline; your order is saved.
 - **Instant sync:** the new tab updates the moment you add, edit, reorder or delete a task.
@@ -58,19 +60,19 @@ If Chrome asks "Change back to Google?", choose **Keep it**. Only one extension 
 
 ### Add a task
 
-- **From the popup:** click the d4te icon, enter a **task name**, optionally a **deadline** and **description**, then click **Add Task**.
+- **From the popup:** click the d4te icon, enter a **task name**, optionally a **deadline**, a **time** (available once a date is set) and a **description**, then click **Add Task**.
 - **From any webpage:** select some text, right-click, and choose **Add "…" to d4te**. The toolbar icon flashes a ✓. Selections longer than 120 characters are shortened for the task name, and the full text is kept in the description.
 
 ### On the new tab
 
-- **Set or change a deadline:** click **+ Set deadline** (or the existing date) and pick a day. Clear the date in the picker to remove it.
+- **Set or change a deadline:** click **+ Set deadline** (or the existing date), pick a day, optionally a time, then press `Enter` or click **✓**. `Esc` or a click elsewhere cancels. Clear the date to remove the deadline and its time.
 - **Add or edit a note:** hover a task and click **+ note**, or click the existing note. Press `Ctrl/Cmd + Enter` or click away to save, and `Esc` to cancel.
 - **Reorder:** drag a task card and drop it above or below another task with the same deadline. A line shows where it will land. Tasks with different deadlines are kept in deadline order automatically.
 - **Delete:** click the **×** button.
 
 ### Edit from the popup
 
-Click the **✎** button next to a task, change its name, deadline or description, then click **Save changes** (or **Cancel**). The task keeps its position.
+Click the **✎** button next to a task, change its name, deadline, time or description, then click **Save changes** (or **Cancel**). The task keeps its position.
 
 ## Project structure
 
@@ -101,6 +103,8 @@ d4te makes no network requests and collects no data.
 - **The footer strip on the new tab** ("Customize Chrome" and the extension name) is added by Chrome to any extension-controlled new tab. Extensions can't remove or restyle it. Brave, Edge and Opera don't show it.
 - Sorting is applied whenever tasks are saved (from the popup, the right-click menu, or the new tab), using a shared `sort.js`. Tasks with the same deadline keep the order you gave them, and new tasks go below the others with that deadline.
 - Days left are counted in whole calendar days using your local time zone, and refresh automatically at midnight.
+- Tasks with a time refresh every minute so the hours countdown stays current. A date-only deadline counts as due at the end of that day when sorting.
+- Drag-and-drop works among tasks with the same deadline and time.
 
 ## Contributing
 

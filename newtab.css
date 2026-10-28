@@ -106,7 +106,21 @@ body {
 }
 .desc:hover { color: var(--text); }
 
-.dateinput, .descinput {
+.editor { display: inline-flex; align-items: center; gap: 6px; }
+.savebtn {
+  background: var(--green);
+  color: #06210f;
+  border: 0;
+  border-radius: 6px;
+  width: 26px;
+  height: 26px;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+.timeinput:disabled { opacity: .45; }
+
+.dateinput, .timeinput, .descinput {
   background: var(--panel);
   color: var(--text);
   border: 1px solid var(--line);
@@ -115,9 +129,9 @@ body {
   font-size: 13px;
   outline: none;
 }
-.dateinput { padding: 3px 6px; }
+.dateinput, .timeinput { padding: 3px 6px; color-scheme: inherit; }
 .descinput { display: block; width: 100%; max-width: 60ch; margin-top: 6px; padding: 8px 10px; line-height: 1.45; resize: vertical; }
-.dateinput:focus, .descinput:focus { border-color: var(--green); }
+.dateinput:focus, .timeinput:focus, .descinput:focus { border-color: var(--green); }
 
 .gauge-wrap { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
 

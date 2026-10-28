@@ -7,6 +7,7 @@ const todayEl = document.getElementById('today');
 
 let dragId = null;
 let dragGroup = null;
+let hasTimed = false; // any task with a time set? then refresh every minute
 
 // Whole calendar days between today (local) and the deadline (local midnight).
 function daysLeft(deadlineISO) {
@@ -15,6 +16,31 @@ function daysLeft(deadlineISO) {
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   return Math.round((deadline - today) / 86400000);
+}
+
+// Deadline as a Date, using the optional time of day (date only = start of that day).
+function deadlineAt(t) {
+  const [y, m, d] = t.deadline.split('-').map(Number);
+  const [hh, mm] = t.time ? t.time.split(':').map(Number) : [0, 0];
+  return new Date(y, m - 1, d, hh, mm);
+}
+
+// A task with a time set and less than a day to go (or less than a day overdue)
+// counts hours and minutes instead of days. Returns null otherwise.
+function hoursInfo(t) {
+  if (!t.deadline || !t.time) return null;
+  const ms = deadlineAt(t) - new Date();
+  if (Math.abs(ms) >= 86400000) return null;
+  const mins = Math.floor(Math.abs(ms) / 60000);
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  const num = h ? (m ? `${h}h ${m}m` : `${h}h`) : (mins ? `${m}m` : '<1m');
+  return { num, unit: ms >= 0 ? 'left' : 'overdue', overdue: ms < 0 };
+}
+
+function prettyTime(hhmm) {
+  const [h, m] = hhmm.split(':').map(Number);
+  return new Date(2000, 0, 1, h, m).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
 // Green >= 7, Yellow 3..6, Red < 3 (incl. overdue), none = no deadline set
@@ -115,31 +141,57 @@ function attachDrag(card, t, groupKey) {
   });
 }
 
-// Click the date (or "+ Set deadline") to pick or change it right on the tab.
+// Click the date (or "+ Set deadline") to pick or change the deadline and time
+// right on the tab. Enter or the ✓ button saves, Esc or a click elsewhere cancels.
 function editDeadline(t, card, trigger) {
-  card.draggable = false; // lets the date field behave normally inside the card
-  const inp = document.createElement('input');
-  inp.type = 'date';
-  inp.className = 'dateinput';
-  inp.value = t.deadline || '';
-  trigger.replaceWith(inp);
-  inp.focus();
-  try { inp.showPicker(); } catch (_) { /* older browsers: field is still usable */ }
+  card.draggable = false; // lets the fields behave normally inside the card
+
+  const wrap = el('span', 'editor');
+  const dateInp = document.createElement('input');
+  dateInp.type = 'date';
+  dateInp.className = 'dateinput';
+  dateInp.value = t.deadline || '';
+  const timeInp = document.createElement('input');
+  timeInp.type = 'time';
+  timeInp.className = 'timeinput';
+  timeInp.title = 'Time (optional)';
+  timeInp.value = t.deadline ? (t.time || '') : '';
+  timeInp.disabled = !dateInp.value;
+  const ok = el('button', 'savebtn', '✓');
+  ok.type = 'button';
+  ok.title = 'Save';
+  wrap.append(dateInp, timeInp, ok);
+  trigger.replaceWith(wrap);
+  dateInp.focus();
+  try { dateInp.showPicker(); } catch (_) { /* older browsers: field is still usable */ }
 
   let done = false;
   const finish = async (save) => {
     if (done) return;
     done = true;
     document.removeEventListener('mousedown', outside, true);
-    if (save && inp.value !== (t.deadline || '')) await updateTask(t.id, { deadline: inp.value });
+    if (save) {
+      const deadline = dateInp.value;
+      const time = deadline ? timeInp.value : '';
+      if (deadline !== (t.deadline || '') || time !== (t.time || '')) await updateTask(t.id, { deadline, time });
+    }
     render();
   };
-  // Clicks inside the native picker popup don't reach the document,
-  // so a click anywhere else means "cancel".
-  const outside = (e) => { if (e.target !== inp) finish(false); };
+  // Clicks inside the native picker popups don't reach the document,
+  // so a click anywhere outside the editor means "cancel".
+  const outside = (e) => { if (!wrap.contains(e.target)) finish(false); };
   document.addEventListener('mousedown', outside, true);
-  inp.addEventListener('change', () => finish(true));
-  inp.addEventListener('keydown', (e) => { if (e.key === 'Escape') finish(false); });
+
+  dateInp.addEventListener('input', () => {
+    timeInp.disabled = !dateInp.value;
+    if (!dateInp.value) timeInp.value = '';
+  });
+  dateInp.addEventListener('change', () => { if (dateInp.value) timeInp.focus(); });
+  ok.addEventListener('click', () => finish(true));
+  wrap.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') finish(false);
+    else if (e.key === 'Enter') { e.preventDefault(); finish(true); }
+  });
 }
 
 // Click the note (or "+ note") to write or edit the description on the tab.
@@ -175,12 +227,15 @@ async function render() {
   const list = sortTasks(Array.isArray(tasks) ? tasks : []); // soonest deadline first
 
   tasksEl.textContent = '';
+  hasTimed = false;
 
   for (const t of list) {
     const hasDeadline = !!t.deadline;
     const days = hasDeadline ? daysLeft(t.deadline) : null;
     const lvl = level(days);
-    const lbl = daysLabel(days);
+    const hrs = hoursInfo(t);
+    const lbl = hrs || daysLabel(days);
+    if (hasDeadline && t.time) hasTimed = true;
 
     const card = el('article', `task ${lvl}`);
 
@@ -193,7 +248,7 @@ async function render() {
     titleRow.append(grip, name);
 
     const due = el('div', 'due');
-    const dueBtn = el('button', 'linkbtn' + (hasDeadline ? '' : ' accent'), hasDeadline ? prettyDate(t.deadline) : '+ Set deadline');
+    const dueBtn = el('button', 'linkbtn' + (hasDeadline ? '' : ' accent'), hasDeadline ? prettyDate(t.deadline) + (t.time ? ' · ' + prettyTime(t.time) : '') : '+ Set deadline');
     dueBtn.title = hasDeadline ? 'Change deadline' : 'Set a deadline';
     dueBtn.addEventListener('click', () => editDeadline(t, card, dueBtn));
     due.appendChild(dueBtn);
@@ -221,7 +276,7 @@ async function render() {
       gauge.appendChild(el('i', i < on ? 'on' : ''));
     }
     // Overdue / due today: show the whole gauge as a red warning
-    if (hasDeadline && days <= 0) {
+    if (hasDeadline && (days <= 0 || (hrs && hrs.overdue))) {
       gauge.querySelectorAll('i').forEach(b => b.classList.add('on'));
       gauge.classList.add('red');
     }
@@ -238,7 +293,7 @@ async function render() {
 
     gaugeWrap.append(gauge, daysEl, del);
     card.append(info, gaugeWrap);
-    attachDrag(card, t, t.deadline || '');
+    attachDrag(card, t, (t.deadline || '') + '|' + (t.time || ''));
     tasksEl.appendChild(card);
   }
 }
@@ -255,10 +310,20 @@ chrome.storage.onChanged.addListener((changes, area) => {
 });
 
 let lastDay = new Date().getDate();
+let lastMinute = new Date().getMinutes();
 setInterval(() => {
   tick();
-  const d = new Date().getDate();
-  if (d !== lastDay) { lastDay = d; render(); } // new day -> recompute
+  const now = new Date();
+  const d = now.getDate();
+  const m = now.getMinutes();
+  const dayChanged = d !== lastDay;
+  const minuteChanged = m !== lastMinute;
+  lastDay = d;
+  lastMinute = m;
+  if (dayChanged) render(); // new day -> recompute
+  else if (minuteChanged && hasTimed && !dragId && !tasksEl.querySelector('.editor, .descinput')) {
+    render(); // keep the hours/minutes countdown fresh, but never interrupt an edit
+  }
 }, 1000);
 
 tick();
