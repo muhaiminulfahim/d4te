@@ -87,6 +87,12 @@
     button.cancel:hover { color: var(--text); }
     .item.editing { background: var(--panel); border-radius: 6px; padding-left: 6px; }
     .item button.edit:hover { color: var(--accent); }
+    .logbar { display: flex; justify-content: center; gap: 14px; margin-top: 14px; }
+    .logbar button { background: none; border: 0; padding: 0; font: inherit; font-size: 11px; color: var(--muted); cursor: pointer; }
+    .logbar button:hover:not(:disabled) { color: var(--accent); text-decoration: underline; }
+    .logbar button:disabled { opacity: .4; cursor: default; }
+    .logbar a { font-size: 11px; color: var(--muted); text-decoration: none; }
+    .logbar a:hover { color: var(--accent); text-decoration: underline; }
     .repo { display: block; margin-top: 14px; text-align: center; font-size: 11px; color: var(--muted); text-decoration: none; }
     .repo:hover { color: var(--accent); }
   </style>
@@ -113,8 +119,16 @@
     <button class="cancel" id="cancel" type="button" hidden>Cancel</button>
   </form>
   <div class="list" id="list"></div>
+  <div class="logbar">
+    <button type="button" id="dl-log">Download log (0)</button>
+    <button type="button" id="clear-log">Clear</button>
+    <a href="data.html" target="_blank" rel="noopener">Data &amp; backup</a>
+  </div>
   <a class="repo" id="repo" target="_blank" rel="noopener noreferrer"></a>
   <script src="sort.js"></script>
+  <script src="log.js"></script>
+  <script src="backup.js"></script>
+  <script src="sync.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

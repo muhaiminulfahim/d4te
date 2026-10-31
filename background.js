@@ -1,4 +1,6 @@
-importScripts('sort.js');
+importScripts('sort.js', 'log.js', 'backup.js', 'sync.js');
+
+startAutoSync(); // mirror every change to the JSON file (once a folder is connected)
 
 const MENU_ID = 'd4te-add-selection';
 const NAME_MAX = 120;
@@ -36,6 +38,7 @@ chrome.contextMenus.onClicked.addListener(async (info) => {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
     name: long ? text.slice(0, NAME_MAX - 1).trimEnd() + '…' : text,
     deadline: '',
+    time: '',
     description: long ? text.slice(0, DESC_MAX) : ''
   };
 
@@ -43,6 +46,7 @@ chrome.contextMenus.onClicked.addListener(async (info) => {
   const list = Array.isArray(tasks) ? tasks : [];
   list.push(task);
   await chrome.storage.local.set({ tasks: sortTasks(list) });
+  await logEvent('add', 'context-menu', task, { data: { deadline: '', time: '', description: logShort(task.description) } });
 
   flashBadge('✓', '#22c55e');
 });

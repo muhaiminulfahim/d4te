@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "d4te: Deadline Visualizer",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Chromium-based browser extension aid for ADHD time-blind people. Offline, accessible and color-coded deadline visualizer.",
   "permissions": ["storage", "contextMenus"],
   "icons": {

@@ -175,3 +175,75 @@ body {
   .gauge-wrap { justify-content: space-between; }
   .gauge i { width: 10px; }
 }
+
+/* ---- complete / completed list ---- */
+.check {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--muted);
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  position: relative;
+  transition: border-color .15s, background .15s;
+}
+.check:hover { border-color: var(--green); background: color-mix(in srgb, var(--green) 22%, transparent); }
+.check::after {
+  content: '✓';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  line-height: 1;
+  color: var(--green);
+  opacity: 0;
+}
+.check:hover::after { opacity: 1; }
+.task.completing { opacity: .35; transition: opacity .25s; }
+.task.completing .name { text-decoration: line-through; }
+.task.completing .check { border-color: var(--green); background: var(--green); }
+
+.done { width: 100%; max-width: 760px; }
+.donetoggle {
+  background: none;
+  border: 0;
+  color: var(--muted);
+  font: inherit;
+  font-size: 13px;
+  letter-spacing: .04em;
+  cursor: pointer;
+  padding: 6px 4px;
+}
+.donetoggle:hover { color: var(--text); }
+.donelist { margin-top: 6px; }
+.doneitem {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 4px;
+  border-bottom: 1px solid var(--line);
+}
+.doneitem:last-child { border-bottom: 0; }
+.donetext { flex: 1; min-width: 0; }
+.donename { font-size: 15px; color: var(--muted); text-decoration: line-through; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.donemeta { margin-top: 2px; font-size: 12px; color: var(--muted); opacity: .75; }
+.donebtn {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-size: 16px;
+  cursor: pointer;
+}
+.donebtn:hover { color: var(--green); background: var(--off); }
+
+.synchint { font-size: 12px; color: var(--muted); text-align: center; opacity: .8; }
+.synchint a { text-decoration: none; }
+.synchint a:hover { text-decoration: underline; }

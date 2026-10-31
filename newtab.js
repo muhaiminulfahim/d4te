@@ -8,6 +8,9 @@ const todayEl = document.getElementById('today');
 let dragId = null;
 let dragGroup = null;
 let hasTimed = false; // any task with a time set? then refresh every minute
+let showDone = false; // is the "Completed" list open?
+const doneEl = document.getElementById('done');
+const hintEl = document.getElementById('sync-hint');
 
 // Whole calendar days between today (local) and the deadline (local midnight).
 function daysLeft(deadlineISO) {
@@ -78,7 +81,13 @@ function el(tag, cls, text) {
 
 async function updateTask(id, patch) {
   const cur = (await store.get('tasks')).tasks || [];
-  await store.set({ tasks: sortTasks(cur.map(x => (x.id === id ? { ...x, ...patch } : x))) });
+  const before = cur.find(x => x.id === id);
+  const after = before ? { ...before, ...patch } : null;
+  await store.set({ tasks: sortTasks(cur.map(x => (x.id === id ? after : x))) });
+  if (before) {
+    const changes = diffTask(before, after);
+    if (Object.keys(changes).length) await logEvent('edit', 'newtab', after, { changes });
+  }
 }
 
 // Move item `dragId` before/after `targetId`.
@@ -129,7 +138,9 @@ function attachDrag(card, t, groupKey) {
     dragId = null;
     clearMarks();
     const cur = (await store.get('tasks')).tasks || [];
+    const moved = cur.find(x => x.id === id);
     await store.set({ tasks: sortTasks(reorder(cur.slice(), id, t.id, after)) });
+    if (moved) await logEvent('reorder', 'newtab', moved, { position: after ? 'after' : 'before', relativeTo: { id: t.id, name: t.name } });
     // storage.onChanged re-renders the list
   });
 
@@ -222,12 +233,72 @@ function editDescription(t, card, info, existing) {
   });
 }
 
+function prettyStamp(iso) {
+  const d = new Date(iso);
+  return isNaN(d) ? '' : d.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+async function completeTask(t, card) {
+  if (card) { card.classList.add('completing'); await new Promise(r => setTimeout(r, 280)); }
+  await updateTask(t.id, { done: true, completedAt: new Date().toISOString() });
+  await logEvent('complete', 'newtab', t, {});
+}
+
+async function restoreTask(t) {
+  await updateTask(t.id, { done: false, completedAt: '' });
+  await logEvent('restore', 'newtab', t, {});
+}
+
+async function deleteForever(t) {
+  const cur = (await store.get('tasks')).tasks || [];
+  await store.set({ tasks: cur.filter(x => x.id !== t.id) });
+  await logEvent('delete', 'newtab', t, { data: { deadline: t.deadline || '', time: t.time || '', completed: true } });
+}
+
+// "Completed (n)" toggle and the list of finished tasks, newest first.
+function renderDone(doneList) {
+  doneEl.textContent = '';
+  if (!doneList.length) { showDone = false; return; }
+  const toggle = el('button', 'donetoggle', `${showDone ? '▾' : '▸'} Completed (${doneList.length})`);
+  toggle.setAttribute('aria-expanded', String(showDone));
+  toggle.addEventListener('click', () => { showDone = !showDone; renderDone(doneList); });
+  doneEl.appendChild(toggle);
+  if (!showDone) return;
+
+  const box = el('div', 'donelist');
+  for (const t of doneList) {
+    const row = el('div', 'doneitem');
+    const back = el('button', 'donebtn', '↺');
+    back.title = 'Mark as not done';
+    back.setAttribute('aria-label', 'Mark as not done');
+    back.addEventListener('click', () => restoreTask(t));
+
+    const text = el('div', 'donetext');
+    const nm = el('div', 'donename', t.name);
+    nm.title = t.name;
+    const meta = [];
+    if (t.completedAt) meta.push('Completed ' + prettyStamp(t.completedAt));
+    if (t.deadline) meta.push('due ' + prettyDate(t.deadline) + (t.time ? ' · ' + prettyTime(t.time) : ''));
+    text.append(nm, el('div', 'donemeta', meta.join(' · ')));
+
+    const del = el('button', 'del', '×');
+    del.title = 'Delete permanently';
+    del.addEventListener('click', () => deleteForever(t));
+    row.append(back, text, del);
+    box.appendChild(row);
+  }
+  doneEl.appendChild(box);
+}
+
 async function render() {
   const { tasks } = await store.get('tasks');
-  const list = sortTasks(Array.isArray(tasks) ? tasks : []); // soonest deadline first
+  const all = sortTasks(Array.isArray(tasks) ? tasks : []); // soonest deadline first
+  const list = all.filter(t => !t.done);
+  const doneList = all.filter(t => t.done).sort((a, b) => (b.completedAt || '').localeCompare(a.completedAt || ''));
 
   tasksEl.textContent = '';
   hasTimed = false;
+  renderDone(doneList);
 
   for (const t of list) {
     const hasDeadline = !!t.deadline;
@@ -245,7 +316,12 @@ async function render() {
     grip.setAttribute('aria-hidden', 'true');
     const name = el('div', 'name', t.name);
     name.title = t.name;
-    titleRow.append(grip, name);
+    const check = el('button', 'check');
+    check.type = 'button';
+    check.title = 'Mark as done';
+    check.setAttribute('aria-label', 'Mark as done');
+    check.addEventListener('click', () => completeTask(t, card));
+    titleRow.append(grip, check, name);
 
     const due = el('div', 'due');
     const dueBtn = el('button', 'linkbtn' + (hasDeadline ? '' : ' accent'), hasDeadline ? prettyDate(t.deadline) + (t.time ? ' · ' + prettyTime(t.time) : '') : '+ Set deadline');
@@ -289,6 +365,7 @@ async function render() {
     del.addEventListener('click', async () => {
       const cur = (await store.get('tasks')).tasks || [];
       await store.set({ tasks: cur.filter(x => x.id !== t.id) });
+      await logEvent('delete', 'newtab', t, { data: { deadline: t.deadline || '', time: t.time || '' } });
     });
 
     gaugeWrap.append(gauge, daysEl, del);
@@ -304,9 +381,32 @@ function tick() {
   todayEl.textContent = now.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
 }
 
+// Quiet reminder when tasks are not mirrored to a JSON file (see data.html).
+async function updateSyncHint() {
+  const s = await syncState().catch(() => 'ok');
+  hintEl.textContent = '';
+  if (s === 'ok') { hintEl.hidden = true; return; }
+  hintEl.hidden = false;
+  if (s === 'needs-permission') {
+    hintEl.append('Backup paused: your browser needs permission again. ');
+    const b = el('button', 'linkbtn accent', 'Reconnect');
+    b.addEventListener('click', async () => { try { await reconnect(); } catch (_) { /* stays paused */ } updateSyncHint(); });
+    hintEl.appendChild(b);
+  } else {
+    hintEl.append(s === 'needs-setup' ? 'Backup folder chosen, but setup is not finished. ' : 'Your tasks are not saved to a JSON file yet. ');
+    const a = el('a', 'linkbtn accent', s === 'needs-setup' ? 'Finish setup' : 'Set up backup');
+    a.href = 'data.html';
+    a.target = '_blank';
+    a.rel = 'noopener';
+    hintEl.appendChild(a);
+  }
+}
+
 // Live updates when the popup or right-click menu adds/edits/deletes tasks
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === 'local' && changes.tasks) render();
+  if (area !== 'local') return;
+  if (changes.tasks) render();
+  if (changes.syncReady || changes.syncStatus) updateSyncHint();
 });
 
 let lastDay = new Date().getDate();
@@ -328,3 +428,6 @@ setInterval(() => {
 
 tick();
 render();
+startAutoSync();
+writeBackup().catch(() => {}); // catches changes made while no page could write (e.g. right-click adds)
+updateSyncHint();
